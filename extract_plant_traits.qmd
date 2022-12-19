@@ -1,0 +1,269 @@
+---
+title: "extract_plant_traits"
+format: html
+editor: visual
+editor_options: 
+  chunk_output_type: console
+---
+
+## Extract plant traits
+
+**Aim:** Extract relevant plant traits from AusTraits, for invertebrates with a known host plant interaction.
+
+```{r}
+library(tidyverse)
+```
+
+```{r}
+data <- read_csv("InverTraits_only_known_plant_associations.csv")
+```
+
+Reformat plant column to work with `ausflora` package
+
+```{r}
+# Remove '?' marks
+data <-
+  data %>% 
+  mutate(associated_plant_taxa = gsub("\\?", "", associated_plant_taxa))
+
+# Split by ", "
+split_df <- 
+  data %>% 
+  separate(associated_plant_taxa, c("a","b","c","d","e","f","g","h","i","j","k"), sep = ", ")
+
+# Pivot to long format
+cleaned_df <-
+  split_df %>% 
+  pivot_longer(c("a","b","c","d","e","f","g","h","i","j","k"), names_to = "old_columns", values_to = "associated_plant_taxa") %>% 
+  drop_na(associated_plant_taxa) %>% 
+  select(-old_columns)
+
+# Extract unique plant taxa names
+associated_plant_taxa <- cleaned_df$associated_plant_taxa %>% unique() %>% as.data.frame()
+colnames(associated_plant_taxa) <- "original_name"
+```
+
+Align with APC using `ausflora` (ignored hybrids and sp./spp.)
+
+```{r}
+# Manually patch names that will not match with `ausflora` with names looked up manually from the APC - most of these are Genus sp. names
+#plant_taxa_aligned %>% filter(is.na(aligned_name)) %>% write_csv("unmatched_taxa.csv")
+
+plant_taxa_patched <- read_csv("unmatched_taxa.csv") %>% 
+  dplyr::select(original_name, could_match) %>% 
+  drop_na(could_match)
+
+associated_plant_taxa <-
+  associated_plant_taxa %>% 
+  left_join(plant_taxa_patched, by = "original_name") %>% 
+  mutate(original_name_patched = if_else(!is.na(could_match), could_match, original_name)) %>% 
+  dplyr::select(-could_match)
+
+# Align names to the APC and APNI
+plant_taxa_aligned <- ausflora::align_taxa(associated_plant_taxa$original_name_patched)
+
+# Update taxonomy for all aligned names
+plant_taxa_updated <- ausflora::update_taxonomy(plant_taxa_aligned$aligned_name,
+                                                output = "associated_plant_taxa.csv")
+
+rm(plant_taxa_patched)
+```
+
+Repeat but remove below-species level taxa so just species, genus or family level IDs are retained (so that fire response data for species can be mapped to below-species taxa if unavailable)
+
+```{r}
+plant_taxa_updated <-
+  plant_taxa_updated %>% 
+  mutate(canonicalName_subbed = gsub("\\s(?:subsp|var|f|sect)\\.\\s.+$", "", canonicalName, perl = TRUE))
+
+plant_taxa_subbed <- 
+  ausflora::update_taxonomy(
+    plant_taxa_updated$canonicalName_subbed, 
+    output = "associated_plant_taxa_to_species_only.csv")
+plant_taxa_subbed <- dplyr::rename(plant_taxa_subbed, canonicalName_subbed = aligned_name)
+```
+
+Join to original names
+
+```{r}
+plant_taxa_aligned <- plant_taxa_aligned %>% dplyr::select(original_name, aligned_name, source)
+plant_taxa_updated <- plant_taxa_updated %>% dplyr::select(aligned_name, canonicalName, canonicalName_subbed, scientificNameAuthorship, taxonomicStatus, taxonRank, family, subclass, taxonDistribution)
+plant_taxa_subbed <- plant_taxa_subbed %>% dplyr::select(canonicalName_subbed, canonicalName, scientificNameAuthorship, taxonomicStatus, taxonRank, family, subclass, taxonDistribution) %>% rename(canonicalName_to_species = canonicalName)
+
+final_taxa <-
+  associated_plant_taxa %>% 
+  left_join(by = "original_name", plant_taxa_aligned) %>% 
+  left_join(by = "aligned_name", plant_taxa_updated) %>% 
+  rquery::natural_join(plant_taxa_subbed, by = "canonicalName_subbed") %>% 
+  relocate(original_name, original_name_patched, aligned_name, source, canonicalName, canonicalName_subbed, canonicalName_to_species, .before = family)
+
+final_taxa %>% write_csv("final_alignments_with_APC.csv")
+# Haven't aligned with the non-below-species alignment yet
+
+final_taxa$canonicalName %>% unique() -> host_plant_taxa
+```
+
+Extract traits from AusTraits
+
+-   `fire_response`
+
+-   `post_fire_recruitment`
+
+-   `reproductive_maturity`
+
+-   `reproductive_maturity_secondary_after_fire`
+
+```{r}
+library(austraits)
+
+invert_plant_taxa <- read_csv("final_alignments_with_APC.csv")
+invert_plant_taxa$canonicalName %>% unique() -> host_plant_taxa
+
+austraits <- 
+  load_austraits(path = "data/austraits", version = get_version_latest())
+
+recovery_traits <-
+  extract_trait(austraits, 
+                c("fire_response", "post_fire_recruitment", "reproductive_maturity", "reproductive_maturity_secondary_after_fire"), 
+                taxon_name = host_plant_taxa)
+```
+
+Attach context columns (fire severity and intensity if available)
+
+```{r}
+recovery_traits <- recovery_traits %>% join_contexts()
+recovery_traits <- recovery_traits$traits 
+```
+
+Check data coverage
+
+```{r}
+recovery_traits %>% 
+  filter(trait_name == "fire_response") -> fire_response
+fire_response$taxon_name %>% unique() %>% length() # 300 unique taxa with resprout or fire_killed data
+
+recovery_traits %>% 
+  filter(trait_name == "post_fire_recruitment") -> post_fire_recruitment
+post_fire_recruitment$taxon_name %>% unique() %>% length() # 184 unique taxa with post-fire recruitment data
+
+recovery_traits %>% 
+  filter(trait_name == "reproductive_maturity") -> reproductive_maturity
+reproductive_maturity$taxon_name %>% unique() %>% length() # 175 unique taxa with reproductive maturity data
+
+recovery_traits %>% 
+  filter(trait_name == "reproductive_maturity_secondary_after_fire") -> reproductive_maturity_secondary_after_fire
+reproductive_maturity_secondary_after_fire$taxon_name %>% unique() %>% length() # 31 unique taxa with secondary reproductive maturity data (time from resprouting to reproductive maturity)
+```
+
+Supplement with scraped data from the floras
+
+```{r}
+scraped_flora_traits <- read_csv("first_draft.csv")
+scraped_flora_traits <-
+  scraped_flora_traits %>% 
+  select(taxon_name, fire_response, post_fire_recruitment, reproductive_maturity, reproductive_maturity_secondary_after_fire, fire_intensity, fire_severity, fire_season)
+scraped_flora_traits$reproductive_maturity <- as.character(scraped_flora_traits$reproductive_maturity)
+scraped_flora_traits$reproductive_maturity_secondary_after_fire <- as.character(scraped_flora_traits$reproductive_maturity_secondary_after_fire)
+
+scraped_flora_traits <-
+  scraped_flora_traits %>% 
+  pivot_longer(c(fire_response, post_fire_recruitment, reproductive_maturity, reproductive_maturity_secondary_after_fire), names_to = "trait_name", values_to = "value")
+
+scraped_flora_traits <-
+  scraped_flora_traits %>% 
+  drop_na(value)
+
+# Align names to the APC and APNI
+scraped_flora_aligned <- ausflora::align_taxa(scraped_flora_traits$taxon_name)
+
+# Update taxonomy for all aligned names
+scraped_flora_updated <- ausflora::update_taxonomy(scraped_flora_aligned$aligned_name)
+
+scraped_flora_aligned <- scraped_flora_aligned %>% dplyr::select(original_name, aligned_name, source)
+scraped_flora_updated <- scraped_flora_updated %>% dplyr::select(aligned_name, canonicalName)
+
+scraped_flora_fixed <-
+  scraped_flora_traits %>% 
+  left_join(by = c("taxon_name" = "original_name"), scraped_flora_aligned) %>% 
+  left_join(by = "aligned_name", scraped_flora_updated) %>% 
+  mutate(taxon_name = canonicalName) %>% 
+  dplyr::select(-canonicalName)
+
+#write_csv(scraped_flora_fixed, "scraped_fire_traits_APC_aligned.csv")
+
+scraped_flora_fixed <-
+  scraped_flora_fixed %>% 
+  filter(taxon_name %in% host_plant_taxa)
+
+full_join(recovery_traits, scraped_flora_fixed) -> full_recovery_traits
+# 4 extra unique taxa with resprout or fire_killed data from floras
+# 5 extra unique taxa with post-fire recruitment data floras
+```
+
+Make simplified binary columns for resprouting and seeding (taking note that this does not capture fire intensity or severity)
+
+```{r}
+full_recovery_traits %>% 
+  group_by(taxon_name) %>% 
+  summarise(
+    resprouts = sum(str_detect(value, "resprouts")) > 0,
+    no_signif_fire_response = sum(str_detect(value, "no_significant_fire_response")) > 0,
+    post_fire_seeder = sum(str_detect(value, "(?<!_)post_fire_recruitment")) > 0) %>% 
+  ungroup() -> resprouting_and_seeding
+```
+
+Simplified columns for reproductive maturity?
+
+```{r}
+full_recovery_traits %>% 
+  filter(trait_name == "reproductive_maturity") -> reproductive_maturity 
+
+reproductive_maturity %>% 
+  mutate(min_maturity = NA_character_,
+         max_maturity = NA_character_) %>% 
+  mutate(min_maturity = if_else(value_type == "bin", str_extract(value, "\\d+(?=\\-\\-)"), min_maturity),
+         max_maturity = if_else(value_type == "bin", str_extract(value, "(?<=\\-\\-)\\d+"), max_maturity),
+         min_maturity = if_else(value_type == "minimum", value, min_maturity),
+         max_maturity = if_else(value_type == "maximum", value, max_maturity)) -> reproductive_maturity
+
+reproductive_maturity %>%
+  group_by(taxon_name) %>% 
+  summarise(min_maturity = min(min_maturity, na.rm = TRUE),
+            max_maturity = max(max_maturity, na.rm = TRUE)) %>% 
+  ungroup() -> rep_maturity_summarised
+
+full_recovery_traits %>% 
+  filter(trait_name == "reproductive_maturity_secondary_after_fire") -> secondary_reproductive_maturity
+
+secondary_reproductive_maturity %>% 
+  mutate(min_second_maturity = NA_character_,
+         max_secondary_maturity = NA_character_) %>% 
+  mutate(min_second_maturity = if_else(value_type == "bin", str_extract(value, "\\d+(?=\\-\\-)"), min_second_maturity),
+         max_secondary_maturity = if_else(value_type == "bin", str_extract(value, "(?<=\\-\\-)\\d+"), max_secondary_maturity),
+         min_secondary_maturity = if_else(value_type == "minimum", value, min_second_maturity),
+         max_secondary_maturity = if_else(value_type == "maximum", value, max_secondary_maturity)) -> secondary_reproductive_maturity
+
+#secondary_reproductive_maturity %>% write_csv("cleaned_secondary_reproductive_maturity.csv") 
+
+cleaned_secondary_maturity <- read_csv("cleaned_secondary_reproductive_maturity.csv")
+
+cleaned_secondary_maturity %>%
+  group_by(taxon_name) %>% 
+  summarise(min_secondary_maturity = min(min_secondary_maturity, na.rm = TRUE),
+            max_secondary_maturity = max(max_secondary_maturity, na.rm = TRUE),
+            est_secondary_maturity = mean(est_secondary_maturity, na.rm = TRUE)) %>% 
+  ungroup() -> secondary_maturity_summarised
+
+secondary_maturity_summarised %>% 
+  mutate(across(where(is.numeric), ~na_if(.x, Inf))) %>% 
+  mutate(across(where(is.numeric), ~na_if(.x, -Inf))) %>% 
+  mutate(across(where(is.numeric), ~na_if(.x, "NaN"))) -> secondary_maturity_summarised
+
+library(rqdatatable)
+simplified_recovery_traits <-
+  resprouting_and_seeding %>% 
+  natural_join(rep_maturity_summarised, by = "taxon_name", jointype = "FULL") %>% 
+  natural_join(secondary_maturity_summarised, by = "taxon_name", jointype = "FULL") %>% relocate(resprouts, post_fire_seeder, no_signif_fire_response, .after = taxon_name)
+
+simplified_recovery_traits %>% write_csv("plant_recovery_traits.csv")
+```
