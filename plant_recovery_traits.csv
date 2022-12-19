@@ -13,7 +13,7 @@ Acacia pendula,TRUE,TRUE,FALSE,20,5,NA,NA,NA
 Acacia podalyriifolia,FALSE,TRUE,FALSE,NA,3,NA,NA,NA
 Acacia pycnantha,TRUE,TRUE,FALSE,3,2,NA,NA,NA
 Acacia ulicifolia,TRUE,TRUE,FALSE,5,1,NA,NA,NA
-Allocasuarina distyla,FALSE,TRUE,FALSE,9,6,NA,NA,NA
+Allocasuarina distyla,TRUE,TRUE,FALSE,9,6,NA,NA,NA
 Allocasuarina luehmannii,TRUE,TRUE,FALSE,20,5,NA,NA,NA
 Allocasuarina muelleriana,FALSE,TRUE,FALSE,NA,NA,NA,NA,NA
 Allocasuarina nana,TRUE,FALSE,FALSE,20,5,NA,NA,NA
@@ -22,7 +22,7 @@ Allocasuarina torulosa,TRUE,TRUE,FALSE,7,NA,NA,NA,NA
 Allocasuarina verticillata,TRUE,TRUE,FALSE,20,5,NA,NA,NA
 Alyxia ruscifolia,TRUE,FALSE,FALSE,7,5,NA,NA,NA
 Amyema,FALSE,FALSE,FALSE,5,1,NA,NA,NA
-Amyema miquelii,FALSE,TRUE,FALSE,5,1,NA,NA,NA
+Amyema miquelii,TRUE,TRUE,FALSE,5,1,NA,NA,NA
 Amyema miraculosa,FALSE,TRUE,FALSE,5,1,NA,NA,NA
 Amyema pendula,FALSE,TRUE,FALSE,5,1,NA,NA,NA
 Amyema preissii,FALSE,TRUE,FALSE,5,1,NA,NA,NA
@@ -285,7 +285,7 @@ Melaleuca uncinata,TRUE,TRUE,TRUE,5,1,NA,NA,NA
 Melaleuca viridiflora,TRUE,TRUE,FALSE,20,5,NA,NA,NA
 Myoporum insulare,TRUE,TRUE,FALSE,5,1,NA,NA,NA
 Myoporum platycarpum,TRUE,TRUE,FALSE,20,5,NA,NA,NA
-Physalis peruviana,FALSE,TRUE,FALSE,NA,NA,NA,NA,NA
+Physalis peruviana,TRUE,TRUE,FALSE,NA,NA,NA,NA,NA
 Pultenaea flexilis,FALSE,TRUE,FALSE,20,5,NA,NA,NA
 Pultenaea tuberculata,TRUE,TRUE,FALSE,NA,2,2,NA,NA
 Rubus,TRUE,FALSE,FALSE,NA,NA,NA,NA,NA
@@ -298,7 +298,7 @@ Syzygium,TRUE,FALSE,TRUE,20,5,NA,NA,NA
 Syzygium australe,TRUE,FALSE,FALSE,NA,NA,NA,NA,NA
 Syzygium hodgkinsoniae,FALSE,FALSE,FALSE,NA,1,NA,NA,NA
 Syzygium oleosum,TRUE,TRUE,FALSE,NA,NA,NA,NA,NA
-Syzygium paniculatum,FALSE,FALSE,FALSE,NA,NA,2,NA,NA
+Syzygium paniculatum,TRUE,FALSE,FALSE,NA,NA,2,NA,NA
 Syzygium smithii,TRUE,FALSE,TRUE,3,5,NA,5,1
 Syzygium wilsonii subsp. wilsonii,TRUE,FALSE,FALSE,NA,NA,NA,NA,NA
 Toona ciliata,TRUE,FALSE,FALSE,NA,NA,NA,NA,NA

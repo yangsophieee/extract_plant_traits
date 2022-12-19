@@ -1,6 +1,6 @@
 resprouts
     TRUE or FALSE
-    whether taxon has been recorded to resprout by at least one source
+    whether taxon has been recorded to resprout (or partially resprout) by at least one source
 
 post_fire_seeder
     TRUE or FALSE

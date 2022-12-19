@@ -207,7 +207,7 @@ Make simplified binary columns for resprouting and seeding (taking note that thi
 full_recovery_traits %>% 
   group_by(taxon_name) %>% 
   summarise(
-    resprouts = sum(str_detect(value, "resprouts")) > 0,
+    resprouts = sum(str_detect(value, "resprout")) > 0,
     no_signif_fire_response = sum(str_detect(value, "no_significant_fire_response")) > 0,
     post_fire_seeder = sum(str_detect(value, "(?<!_)post_fire_recruitment")) > 0) %>% 
   ungroup() -> resprouting_and_seeding
