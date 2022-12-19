@@ -198,6 +198,7 @@ scraped_flora_fixed <-
 full_join(recovery_traits, scraped_flora_fixed) -> full_recovery_traits
 # 4 extra unique taxa with resprout or fire_killed data from floras
 # 5 extra unique taxa with post-fire recruitment data floras
+full_recovery_traits %>% write_csv("full_plant_recovery_traits.csv")
 ```
 
 Make simplified binary columns for resprouting and seeding (taking note that this does not capture fire intensity or severity)

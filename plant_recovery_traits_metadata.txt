@@ -1,0 +1,30 @@
+resprouts
+    TRUE or FALSE
+    whether taxon has been recorded to resprout by at least one source
+
+post_fire_seeder
+    TRUE or FALSE
+    whether taxon has been recorded as having post-fire recruitment by at least one source
+
+no_signif_fire_response
+    TRUE or FALSE
+    whether taxon has been recorded as having 'no significant fire response' by at least 
+    one source, meaning they are rarely killed by a moderate-intensity fire, but also do 
+    not resprout
+
+max_maturity
+    maximum time to reproductive maturity (years) recorded by at least one source
+    
+min_maturity
+    minimum time to reproductive maturity (years) recorded by at least one source
+
+max_secondary_maturity
+    maximum time to secondary reproductive maturity (years) recorded by at least one source
+    (this is for species that survive a fire: the number of years post-disturbance required 
+    to resprout and re-reach reproductive maturity)
+    
+min_secondary_maturity
+    minimum time to secondary reproductive maturity (years) recorded by at least one source
+
+est_secondary_maturity
+    time to secondary reproductive maturity, value type (e.g. minimum, maximum) not specified 
