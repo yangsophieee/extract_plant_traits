@@ -1,5 +1,5 @@
 taxon_name,fire_intensity,fire_severity,fire_season,trait_name,value,aligned_name,source
-Acacia acradenia,hot,NA,NA,fire_response,fire_killed,Acacia acradenia,APC list (accepted)
+Acacia acradenia,high,NA,NA,fire_response,fire_killed,Acacia acradenia,APC list (accepted)
 Acacia adoxa var. adoxa,NA,NA,NA,post_fire_recruitment,post_fire_recruitment,Acacia adoxa var. adoxa,APC list (accepted)
 Acacia adsurgens,NA,NA,NA,fire_response,fire_killed,Acacia adsurgens,APC list (accepted)
 Acacia adsurgens,NA,NA,NA,post_fire_recruitment,post_fire_recruitment,Acacia adsurgens,APC list (accepted)
@@ -1076,3 +1076,82 @@ Xerochrysum bracteatum,NA,NA,NA,post_fire_recruitment,post_fire_recruitment,Xero
 Xylomelum angustifolium,NA,NA,NA,fire_response,resprouts,Xylomelum angustifolium,APC list (accepted)
 Zantedeschia aethiopica,NA,NA,NA,fire_response,resprouts,Zantedeschia aethiopica,APC list (accepted)
 Roepera flava,NA,NA,NA,post_fire_recruitment,post_fire_recruitment,Zygophyllum flavum,APC list (known names)
+Terminalia prostrata,NA,NA,NA,fire_response,resprouts,Terminalia prostrata,APC list (accepted)
+Hibbertia ferox,NA,NA,NA,fire_response,resprouts,Hibbertia ferox,APNI names
+Hibbertia polyancistra,NA,NA,NA,fire_response,resprouts,Hibbertia polyancistra,APNI names
+Hibbertia pubens,NA,NA,NA,fire_response,resprouts,Hibbertia pubens,APNI names
+Hibbertia robur,NA,NA,NA,fire_response,resprouts,Hibbertia robur,APC list (accepted)
+Hibbertia sejuncta,NA,NA,NA,fire_response,resprouts,Hibbertia sejuncta,APNI names
+Hibbertia sericosepala,NA,NA,NA,fire_response,resprouts,Hibbertia sericosepala,APC list (accepted)
+Hibbertia striata,NA,NA,NA,fire_response,resprouts,Hibbertia striata,APNI names
+Leucopogon alternifolius,NA,NA,NA,fire_response,fire_killed,Leucopogon alternifolius,APC list (accepted)
+Leucopogon altissimus,NA,NA,NA,fire_response,fire_killed,Leucopogon altissimus,APC list (accepted)
+Leucopogon audax,NA,NA,NA,fire_response,fire_killed,Leucopogon audax,APC list (accepted)
+Leucopogon canaliculatus,NA,NA,NA,fire_response,fire_killed,Leucopogon canaliculatus,APC list (accepted)
+Leucopogon darlingensis,NA,NA,NA,fire_response,resprouts fire_killed,Leucopogon darlingensis,APC list (accepted)
+Leucopogon darlingensis subsp. darlingensis,NA,NA,NA,fire_response,resprouts fire_killed,Leucopogon darlingensis subsp. darlingensis,APC list (accepted)
+Leucopogon darlingensis subsp. rectus,NA,NA,NA,fire_response,resprouts fire_killed,Leucopogon darlingensis subsp. rectus,APC list (accepted)
+Leucopogon diversifolius,NA,NA,NA,fire_response,fire_killed,Leucopogon diversifolius,APC list (accepted)
+Leucopogon elegans subsp. psorophyllus,NA,NA,NA,fire_response,fire_killed,Leucopogon elegans subsp. psorophyllus,APC list (accepted)
+Leucopogon extremus,NA,NA,NA,fire_response,fire_killed,Leucopogon extremus,APC list (accepted)
+Leucopogon foliosus,NA,NA,NA,fire_response,fire_killed resprouts,Leucopogon foliosus,APC list (accepted)
+Leucopogon grammatus,NA,NA,NA,fire_response,fire_killed,Leucopogon grammatus,APC list (accepted)
+Leucopogon incisus,NA,NA,NA,fire_response,fire_killed,Leucopogon incisus,APC list (accepted)
+Leucopogon inflexus,NA,NA,NA,fire_response,fire_killed,Leucopogon inflexus,APC list (accepted)
+Leucopogon maritimus,NA,NA,NA,fire_response,fire_killed,Leucopogon maritimus,APC list (accepted)
+Leucopogon navicularis,NA,NA,NA,fire_response,fire_killed,Leucopogon navicularis,APC list (accepted)
+Leucopogon newbeyi,NA,NA,NA,fire_response,fire_killed,Leucopogon newbeyi,APC list (accepted)
+Leucopogon nitidus,NA,NA,NA,fire_response,fire_killed,Leucopogon nitidus,APC list (accepted)
+Leucopogon prolatus,NA,NA,NA,fire_response,fire_killed,Leucopogon prolatus,APC list (accepted)
+Leucopogon simulans,NA,NA,NA,fire_response,fire_killed,Leucopogon simulans,APC list (accepted)
+Leucopogon stokesii,NA,NA,NA,fire_response,fire_killed,Leucopogon stokesii,APC list (accepted)
+Leucopogon subsejunctus,NA,NA,NA,fire_response,fire_killed,Leucopogon subsejunctus,APC list (accepted)
+Leucopogon wheelerae,NA,NA,NA,fire_response,fire_killed,Leucopogon wheelerae,APC list (accepted)
+Acacia dimorpha,NA,NA,NA,post_fire_recruitment,post_fire_recruitment,Acacia dimorpha,APC list (accepted)
+Crotalaria inaequalis,NA,NA,NA,fire_response,resprouts,Crotalaria inaequalis,APC list (accepted)
+Leptosema chambersii,NA,NA,NA,post_fire_recruitment,post_fire_recruitment,Leptosema chambersii,APC list (accepted)
+Leptosema chapmanii,NA,NA,NA,post_fire_recruitment,post_fire_recruitment,Leptosema chapmanii,APC list (accepted)
+Leptosema daviesioides,NA,NA,NA,post_fire_recruitment,post_fire_recruitment,Leptosema daviesioides,APC list (accepted)
+Leptosema villosum,NA,NA,NA,post_fire_recruitment,post_fire_recruitment,Leptosema villosum,APC list (accepted)
+Swainsona colutoides,NA,NA,NA,post_fire_recruitment,post_fire_recruitment,Swainsona colutoides,APC list (accepted)
+Tephrosia sp. Magazine Hill (P.Jones 365),NA,NA,NA,post_fire_recruitment,post_fire_recruitment,Tephrosia sp. Magazine Hill (P.Jones 365),APC list (accepted)
+Vigna suberecta,NA,NA,NA,fire_response,resprouts,Vigna suberecta,APC list (accepted)
+Premna herbacea,NA,NA,NA,fire_response,resprouts,Premna herbacea,APC list (accepted)
+Stachys germanica,NA,NA,NA,post_fire_recruitment,post_fire_recruitment,Stachys germanica,APC list (accepted)
+Gossypium anapoides,NA,NA,NA,fire_response,resprouts,Gossypium anapoides,APC list (accepted)
+Hibiscus sankowskyorum,NA,NA,NA,fire_response,resprouts,Hibiscus sankowskyorum,APC list (accepted)
+Thryptomene dampieri,NA,NA,NA,fire_response,resprouts,Thryptomene dampieri,APC list (accepted)
+Solanum sejunctum,NA,NA,NA,post_fire_recruitment,no_post_fire_recruitment,Solanum sejunctum,APC list (accepted)
+Acacia colei,NA,NA,NA,post_fire_recruitment,post_fire_recruitment,Acacia colei,APC list (accepted)
+Cyphanthera odgersii subsp. odgersii,NA,NA,NA,post_fire_recruitment,post_fire_recruitment,Cyphanthera odgersii subsp. odgersii,APC list (accepted)
+Geniostoma rupestre var. australianum,NA,NA,NA,post_fire_recruitment,post_fire_recruitment,Geniostoma rupestre var. australianum,APC list (accepted)
+Helminthotheca echioides,NA,NA,NA,post_fire_recruitment,post_fire_recruitment,Helminthotheca echioides,APC list (accepted)
+Isopogon prostratus,NA,NA,NA,fire_response,fire_killed,Isopogon prostratus,APC list (accepted)
+Solanum hystrix,NA,NA,NA,post_fire_recruitment,post_fire_recruitment,Solanum hystrix,APC list (accepted)
+Xylomelum scottianum,NA,NA,NA,fire_response,resprouts,Xylomelum scottianum,APC list (accepted)
+Solanum nigrum,NA,NA,NA,fire_response,fire_killed,Solanum nigrum,APC list (accepted)
+Solanum nigrum,NA,NA,NA,post_fire_recruitment,post_fire_recruitment,Solanum nigrum,APC list (accepted)
+Caladenia nana,NA,NA,NA,post_fire_recruitment,post_fire_recruitment,Caladenia nana,APNI names
+Prasophyllum gracillimum,NA,NA,NA,post_fire_recruitment,post_fire_recruitment,Prasophyllum gracillimum,APNI names
+Caladenia applanata,NA,NA,NA,post_fire_recruitment,post_fire_recruitment,Caladenia applanata,APNI names
+Caladenia applanata subsp. erubescens,NA,NA,NA,post_fire_recruitment,post_fire_recruitment,Caladenia applanata subsp. erubescens,APNI names
+Caladenia pholcoidea,NA,NA,NA,post_fire_recruitment,post_fire_recruitment,Caladenia pholcoidea,APNI names
+Caladenia pholcoidea subsp. pholcoidea,NA,NA,NA,post_fire_recruitment,post_fire_recruitment,Caladenia pholcoidea subsp. pholcoidea,APNI names
+Caladenia pholcoidea subsp. augustensis,NA,NA,NA,post_fire_recruitment,post_fire_recruitment,Caladenia pholcoidea subsp. augustensis,APNI names
+Caladenia ultima,NA,NA,NA,post_fire_recruitment,post_fire_recruitment,Caladenia ultima,APNI names
+Trachymene anisocarpa var. trichocarpa,NA,NA,NA,post_fire_recruitment,post_fire_recruitment,Trachymene anisocarpa var. trichocarpa,APC list (accepted)
+Trachymene anisocarpa var. anisocarpa,NA,NA,NA,post_fire_recruitment,post_fire_recruitment,Trachymene anisocarpa var. anisocarpa,APC list (accepted)
+Alstroemeria psittacina,NA,NA,NA,post_fire_recruitment,post_fire_recruitment,Alstroemeria psittacina,APC list (accepted)
+Stemodia sp. Onslow (A.A.Mitchell 76/148),NA,NA,NA,post_fire_recruitment,post_fire_recruitment,Stemodia sp. Onslow (A.A.Mitchell 76/148),APC list (accepted)
+Darwinia sp. Ravensthorpe (G.J.Keighery 8030),NA,NA,NA,post_fire_recruitment,post_fire_recruitment,Darwinia sp. Ravensthorpe (G.J.Keighery 8030),APC list (accepted)
+Pterostylis sp. broad petals (S.D.Hopper 4429),NA,NA,NA,post_fire_recruitment,post_fire_recruitment,Pterostylis sp. broad petals (S.D.Hopper 4429),APNI names
+Thysanotus sp. Great Victoria Desert (A.S.George 8406),NA,NA,NA,post_fire_recruitment,post_fire_recruitment,Thysanotus sp. Great Victoria Desert (A.S.George 8406),APC list (accepted)
+Cassinia aculeata,NA,NA,NA,post_fire_recruitment,post_fire_recruitment,Cassinia aculeata,APC list (accepted)
+Solanum hystrix,NA,NA,NA,post_fire_recruitment,post_fire_recruitment,Solanum hystrix,APC list (accepted)
+Senecio pterophorus,NA,NA,NA,post_fire_recruitment,post_fire_recruitment,Senecio pterophorus,APC list (accepted)
+Acrotriche serrulata,NA,NA,NA,fire_response,resprouts,Acrotriche serrulata,APC list (accepted)
+Isopogon prostratus,NA,NA,NA,fire_response,fire_killed,Isopogon prostratus,APC list (accepted)
+Microtis arenaria,NA,NA,NA,post_fire_recruitment,post_fire_recruitment,Microtis arenaria,APNI names
+Piptochaetium uruguense,NA,NA,NA,fire_response,resprouts,Piptochaetium uruguense,APC list (accepted)
+Sebaea ovata,NA,NA,NA,post_fire_recruitment,post_fire_recruitment,Sebaea ovata,APC list (accepted)
+Solanum aviculare,NA,NA,NA,post_fire_recruitment,post_fire_recruitment,Solanum aviculare,APC list (accepted)
