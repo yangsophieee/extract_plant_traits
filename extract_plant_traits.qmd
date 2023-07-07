@@ -26,10 +26,14 @@ data <-
   data %>% 
   mutate(associated_plant_taxa = gsub("\\?", "", associated_plant_taxa))
 
-# Split by ", "
+data$associated_plant_taxa %>% unique() -> associated_plant_taxa
+tibble(associated_plants = associated_plant_taxa) %>% 
+  mutate(number_of_taxa = str_count(associated_plants, pattern = ",") + 1) -> associated_plants # Maximum 11 plant taxa listed for a given invertebrate
+
+# Split by ", " to separate plant taxa in single column
 split_df <- 
   data %>% 
-  separate(associated_plant_taxa, c("a","b","c","d","e","f","g","h","i","j","k"), sep = ", ")
+  separate(associated_plant_taxa, c("a","b","c","d","e","f","g","h","i","j","k"), sep = ", ") # Allow 11 columns
 
 # Pivot to long format
 cleaned_df <-
@@ -39,8 +43,8 @@ cleaned_df <-
   select(-old_columns)
 
 # Extract unique plant taxa names
-associated_plant_taxa <- cleaned_df$associated_plant_taxa %>% unique() %>% as.data.frame()
-colnames(associated_plant_taxa) <- "original_name"
+associated_plant_taxa <- 
+  cleaned_df$associated_plant_taxa %>% unique() %>% tibble(original_name = .)
 ```
 
 Align with APC using `ausflora` (ignored hybrids and sp./spp.)
@@ -158,7 +162,7 @@ reproductive_maturity_secondary_after_fire$taxon_name %>% unique() %>% length() 
 Supplement with scraped data from the floras
 
 ```{r}
-scraped_flora_traits <- read_csv("first_draft.csv")
+scraped_flora_traits <- read_csv("compiled_scraped_fire_traits.csv")
 scraped_flora_traits <-
   scraped_flora_traits %>% 
   select(taxon_name, fire_response, post_fire_recruitment, reproductive_maturity, reproductive_maturity_secondary_after_fire, fire_intensity, fire_severity, fire_season)
@@ -189,7 +193,7 @@ scraped_flora_fixed <-
   mutate(taxon_name = canonicalName) %>% 
   dplyr::select(-canonicalName)
 
-#write_csv(scraped_flora_fixed, "scraped_fire_traits_APC_aligned.csv")
+write_csv(scraped_flora_fixed, "scraped_fire_traits_APC_aligned.csv")
 
 scraped_flora_fixed <-
   scraped_flora_fixed %>% 
