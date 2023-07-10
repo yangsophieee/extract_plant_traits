@@ -1,30 +1,33 @@
-resprouts
+taxon_name
+    taxon names as they appear in AusTraits, i.e. names are aligned with the Australian Plant Census (see ausflora package
+    to align names with APC)
+
+resprouting binomial
     TRUE or FALSE
-    whether taxon has been recorded to resprout (or partially resprout) by at least one source
+    whether taxon has been recorded to resprout (or partially resprout) by more than 30% of sources; this is derived
+    from the `resprouting_capacity` trait
 
-post_fire_seeder
+seeding_binomial
     TRUE or FALSE
-    whether taxon has been recorded as having post-fire recruitment by at least one source
+    whether taxon has been recorded as having post-fire recruitment by more than 30% of sources; this is derived from
+    the `post_fire_recruitment` trait
 
-no_signif_fire_response
-    TRUE or FALSE
-    whether taxon has been recorded as having 'no significant fire response' by at least 
-    one source, meaning they are rarely killed by a moderate-intensity fire, but also do 
-    not resprout
+min_maturity_primary
+    minimum time to reproductive maturity (years) recorded by at least one source; this is derived from
+    the `reproductive_maturity`, `fire_time_from_fire_to_flowering` and `fire_time_from_fire_to_fruiting` traits
 
-max_maturity
-    maximum time to reproductive maturity (years) recorded by at least one source
-    
-min_maturity
-    minimum time to reproductive maturity (years) recorded by at least one source
+avg_maturity_primary
+    average time to reproductive maturity (years) recorded by at least one source; this is derived from
+    the `reproductive_maturity`, `fire_time_from_fire_to_flowering` and `fire_time_from_fire_to_fruiting` traits
 
-max_secondary_maturity
-    maximum time to secondary reproductive maturity (years) recorded by at least one source
-    (this is for species that survive a fire: the number of years post-disturbance required 
-    to resprout and re-reach reproductive maturity)
-    
-min_secondary_maturity
-    minimum time to secondary reproductive maturity (years) recorded by at least one source
+bin_maturity_primary
+    time to reproductive maturity (years) recorded as a bin; this is derived from the `reproductive_maturity` trait
 
-est_secondary_maturity
-    time to secondary reproductive maturity, value type (e.g. minimum, maximum) not specified 
+min_maturity_secondary
+    maximum time to secondary reproductive maturity (years) recorded by at least one source (this is for species that
+    survive a fire: the number of years post-disturbance required to resprout and re-reach reproductive maturity); this is
+    derived from the `fire_time_from_fire_to_flowering` and `fire_time_from_fire_to_fruiting` traits
+
+avg_maturity_secondary
+    average time to secondary reproductive maturity (years) recorded by at least one source; this is
+    derived from the `fire_time_from_fire_to_flowering` and `fire_time_from_fire_to_fruiting` traits
