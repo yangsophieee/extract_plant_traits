@@ -2,7 +2,7 @@ taxon_name
     taxon names as they appear in AusTraits, i.e. names are aligned with the Australian Plant Census (see ausflora package
     to align names with APC)
 
-resprouting binomial
+resprouting_binomial
     TRUE or FALSE
     whether taxon has been recorded to resprout (or partially resprout) by more than 30% of sources; this is derived
     from the `resprouting_capacity` trait

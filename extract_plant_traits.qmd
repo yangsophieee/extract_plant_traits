@@ -127,32 +127,12 @@ recovery_traits <-
 austraits$contexts %>%
   filter(context_property %in% c("time to flowering type")) %>%
   distinct(across(-link_vals), .keep_all = TRUE) %>%
-  pivot_wider(names_from = link_id, values_from = link_vals) %>%
-  pivot_wider(names_from = context_property, values_from = value) -> contexts
-
-check_if_join <- function(dataset_id_to_check, entity_context_id_to_check, contexts) {
-  (contexts %>% filter(dataset_id_to_check == dataset_id, str_detect(entity_context_id, entity_context_id_to_check)) %>% nrow()) > 0
-}
-
-recovery_traits <-
-  recovery_traits %>%
-  rowwise() %>%
-  mutate(to_join = check_if_join(dataset_id, entity_context_id, contexts))
-
-contexts <-
-  contexts %>%
-  mutate(to_join = TRUE)
+  pivot_wider(names_from = context_property, values_from = value) %>%
+  separate_longer_delim(link_vals, delim = ", ") -> contexts
 
 new_recovery_traits <- recovery_traits %>%
-  left_join(contexts, by = c("dataset_id", "to_join"))
+  left_join(contexts, by = c("dataset_id", "entity_context_id" = "link_vals"))
 
-new_recovery_traits <-
-  new_recovery_traits %>%
-  filter(str_detect(entity_context_id.y, entity_context_id.x) | is.na(entity_context_id.y))
-```
-
-
-```{r}
 new_recovery_traits <- new_recovery_traits %>%
   pivot_wider(names_from = trait_name, values_from = value)
 ```
@@ -161,8 +141,8 @@ new_recovery_traits <- new_recovery_traits %>%
 ```{r}
 new_recovery_traits %>%
   mutate(
-    fire_time_from_fire_to_flowering = as.numeric(fire_time_from_fire_to_flowering)/12,
-    fire_time_from_fire_to_fruiting = as.numeric(fire_time_from_fire_to_fruiting)/12,
+    fire_time_from_fire_to_flowering = (as.numeric(fire_time_from_fire_to_flowering))/12,
+    fire_time_from_fire_to_fruiting = (as.numeric(fire_time_from_fire_to_fruiting))/12,
     min_maturity = NA_character_,
     max_maturity = NA_character_,
     avg_maturity = NA_character_,
@@ -268,13 +248,6 @@ fire_time_from_fire_to_fruiting$taxon_name %>% unique() %>% length()
 Make simplified binary columns for resprouting and seeding (taking note that this does not capture fire intensity or severity)
 
 ```{r}
-recovery_traits %>%
-  group_by(taxon_name) %>%
-  summarise(
-    resprouts = sum(str_detect(value, "resprout")) > 0,
-    post_fire_seeder = sum(str_detect(value, "(?<!_)post_fire_recruitment")) > 0) %>%
-  ungroup() -> resprouting_and_seeding
-
 new_recovery_traits <- new_recovery_traits %>%
   pivot_wider(names_from = trait_name, values_from = value)
 ```
@@ -342,23 +315,185 @@ rep_maturity_summarised %>%
 rep_maturity_summarised %>%
   filter(!is.na(min_maturity_primary) | !is.na(avg_maturity_primary) | !is.na(bin_maturity_primary) | !is.na(min_maturity_secondary) | !is.na(avg_maturity_secondary)) -> rep_maturity_summarised
 
-austraits$traits %>%
-  filter(trait_name %in% c("resprouting_capacity", "post_fire_recruitment")) %>%
-  group_by(taxon_name) %>%
-  summarise(
-    resprouts = sum(str_detect(value, "resprout")) > 0,
-    post_fire_seeder = sum(str_detect(value, "(?<!_)post_fire_recruitment")) > 0) %>%
-  ungroup() -> resprouting_and_seeding
+```
+
+```{r}
+resprouting_capacity <-
+  austraits$traits %>%
+  filter(trait_name == "resprouting_capacity") %>%
+  pivot_wider(values_from = value, names_from = trait_name)
+
+resprouting_capacity_summary <-
+  resprouting_capacity %>%
+  group_by(taxon_name, resprouting_capacity) %>%
+  summarise(count = n()) %>%
+  pivot_wider(names_from = resprouting_capacity,
+              values_from = count) %>%
+  ungroup() %>%
+  mutate(across(where(is.integer), ~ replace_na(., 0)))
+
+col <- colnames(resprouting_capacity_summary)
+col <- col[!col %in% c("taxon_name")]
+
+resprouting_capacity_summary <-
+  resprouting_capacity_summary %>%
+  mutate(variation_in_strat = (rowSums(resprouting_capacity_summary[,col] > 0) > 1))
+
+names(resprouting_capacity_summary) <-
+  names(resprouting_capacity_summary) %>%
+  str_replace_all(c(" " = "_"))
+
+resprouting_capacity_summary <-
+  resprouting_capacity_summary %>%
+  mutate(
+    resprouting = if_else(
+      variation_in_strat == FALSE,
+      case_when(
+        fire_killed >= 1 ~ "does not resprout",
+        resprouts >= 1 ~ "mostly resprouts",
+        fire_killed_partial_resprouting >= 1 ~ "sometimes resprouts",
+        fire_killed_resprouts >= 1 ~ "sometimes resprouts",
+        partial_resprouting >= 1 ~ "sometimes resprouts",
+        fire_killed_partial_resprouting_resprouts >= 1 ~ "sometimes resprouts",
+        partial_resprouting_resprouts >= 1 ~ "mostly resprouts"),
+      NA_character_
+      )
+    )
+
+resprouting_capacity_summary <-
+  resprouting_capacity_summary %>%
+  mutate(
+    resprout_tally =
+      resprouts + fire_killed_partial_resprouting + fire_killed_resprouts + partial_resprouting +
+      fire_killed_partial_resprouting_resprouts + partial_resprouting_resprouts,
+    does_not_resprout_tally =
+      fire_killed + fire_killed_partial_resprouting + fire_killed_resprouts +
+      fire_killed_partial_resprouting_resprouts
+  )
+
+resprouting_capacity_summary <-
+  resprouting_capacity_summary %>%
+  mutate(resprout_prop = resprout_tally / (resprout_tally + does_not_resprout_tally))
+
+resprouting_capacity_summary <-
+  resprouting_capacity_summary %>%
+  mutate(
+    resprouting = if_else(
+      variation_in_strat == TRUE,
+      case_when(
+        resprout_prop < 0.3 ~ "does not resprout",
+        resprout_prop < 0.7 ~ "sometimes resprouts",
+        resprout_prop >= 0.7 ~ "mostly resprouts"),
+      resprouting
+      )
+    )
+
+post_fire_recruitment <-
+  austraits$traits %>%
+  filter(trait_name == "post_fire_recruitment") %>%
+  pivot_wider(values_from = value, names_from = trait_name)
+
+post_fire_recruitment_summary <-
+  post_fire_recruitment %>%
+  group_by(taxon_name, post_fire_recruitment) %>%
+  summarise(count = n()) %>%
+  pivot_wider(names_from = post_fire_recruitment,
+              values_from = count) %>%
+  ungroup() %>%
+  mutate(across(where(is.integer), ~ replace_na(., 0)))
+
+names(post_fire_recruitment_summary) <-
+  names(post_fire_recruitment_summary) %>%
+  str_replace_all(c(" " = "_"))
+
+col <- colnames(post_fire_recruitment_summary)
+col <- col[!col %in% c("taxon_name")]
+
+post_fire_recruitment_summary <-
+  post_fire_recruitment_summary %>%
+  mutate(variation_in_seeding = (rowSums(post_fire_recruitment_summary[,col] > 0) > 1))
+
+post_fire_recruitment_summary <-
+  post_fire_recruitment_summary %>%
+  mutate(
+    post_fire_seeding = if_else(
+      variation_in_seeding == FALSE,
+      case_when(
+        post_fire_recruitment >= 1 ~ "robust post-fire seeding",
+        post_fire_recruitment_absent >= 1 ~ "no post-fire seeding",
+        post_fire_recruitment_post_fire_recruitment_absent >= 1 ~ "some post-fire seeding"),
+      NA_character_
+      )
+    )
+
+post_fire_recruitment_summary <-
+  post_fire_recruitment_summary %>%
+  mutate(post_fire_recruitment_tally =
+           post_fire_recruitment +
+           post_fire_recruitment_post_fire_recruitment_absent,
+         no_post_fire_recruitment_tally =
+           post_fire_recruitment_absent +
+           post_fire_recruitment_post_fire_recruitment_absent)
+
+post_fire_recruitment_summary <-
+  post_fire_recruitment_summary %>%
+  mutate(seeding_prop = post_fire_recruitment_tally / (post_fire_recruitment_tally + no_post_fire_recruitment_tally))
+
+post_fire_recruitment_summary <-
+  post_fire_recruitment_summary %>%
+  mutate(
+    post_fire_seeding = if_else(
+      variation_in_seeding == TRUE,
+      case_when(
+        seeding_prop < 0.3 ~ "no post-fire seeding",
+        seeding_prop < 0.7 ~ "some post-fire seeding",
+        seeding_prop >= 0.7 ~ "robust post-fire seeding"),
+      post_fire_seeding)
+    )
+
+resprouting <-
+  resprouting_capacity_summary %>%
+  select(taxon_name, resprouting)
+
+post_fire_seeding <-
+  post_fire_recruitment_summary %>%
+  select(taxon_name, post_fire_seeding)
+
+resprouting_seeding <-
+  resprouting %>%
+  full_join(post_fire_seeding, by = c("taxon_name"))
+
+resprouting_seeding <-
+  resprouting_seeding %>%
+  mutate(data_on_both = !is.na(resprouting) & !is.na(post_fire_seeding))
+
+resprouting_seeding <-
+  resprouting_seeding %>%
+  mutate(
+    resprouting_binomial = case_when(
+      resprouting %in% c("mostly resprouts", "sometimes resprouts") ~ TRUE,
+      resprouting %in% c("does not resprout") ~ FALSE),
+    seeding_binomial = case_when(
+      post_fire_seeding %in% c("robust post-fire seeding", "some post-fire seeding") ~ TRUE,
+      post_fire_seeding %in% c("no post-fire seeding") ~ FALSE)
+    )
+
+resprouting_seeding <-
+  resprouting_seeding %>%
+  select(taxon_name, resprouting_binomial, seeding_binomial)
+```
+
+```{r}
+saveRDS(resprouting_seeding, "resprouting_seeding.rds")
 resprouting_seeding <- read_rds("resprouting_seeding.rds")
 
 library(rqdatatable)
 simplified_recovery_traits <-
-  resprouting_and_seeding %>%
+  resprouting_seeding %>%
   natural_join(rep_maturity_summarised, by = "taxon_name", jointype = "FULL")
 
-simplified_recovery_traits %>% write_csv("plant_recovery_traits.csv")
+simplified_recovery_traits %>% write_csv("plant_recovery_traits_updated_sep_2023.csv")
 ```
-
 
 ```{r}
 data <- read_csv("missing_plant_names_Sep_2023.csv")

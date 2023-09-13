@@ -1,0 +1,15 @@
+taxon_name,resprouting_binomial,seeding_binomial,avg_maturity_primary,avg_maturity_secondary,bin_maturity_primary,min_maturity_primary,min_maturity_secondary
+Asphodelus fistulosus,TRUE,NA,NA,NA,NA,NA,NA
+Chamaecytisus palmensis,FALSE,TRUE,NA,NA,NA,NA,NA
+Coronidium rutidolepis,TRUE,NA,NA,NA,NA,1,0.3488372093023258
+Crataegus monogyna,NA,TRUE,NA,NA,NA,NA,NA
+Eremaea pauciflora var. pauciflora,TRUE,NA,NA,NA,NA,NA,NA
+Leucanthemum vulgare,TRUE,NA,NA,NA,NA,NA,NA
+Pinus patula,NA,TRUE,NA,NA,NA,NA,NA
+Pinus radiata,TRUE,TRUE,NA,NA,NA,NA,NA
+Senecio depressicola,TRUE,NA,NA,NA,0--1,NA,NA
+Stylidium rigidulum,TRUE,NA,NA,NA,NA,NA,NA
+Taraxacum sect. Taraxacum,TRUE,TRUE,NA,1,NA,1,0.21317829457364335
+Triumfetta rhomboidea,FALSE,NA,NA,NA,NA,NA,NA
+Vachellia bidwillii,TRUE,TRUE,NA,NA,NA,NA,NA
+Verbena bonariensis,TRUE,TRUE,NA,NA,NA,NA,NA
