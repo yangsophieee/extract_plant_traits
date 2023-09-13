@@ -2,7 +2,7 @@
 title: "extract_plant_traits"
 format: html
 editor: visual
-editor_options: 
+editor_options:
   chunk_output_type: console
 ---
 
@@ -23,27 +23,27 @@ Reformat plant column to work with `ausflora` package
 ```{r}
 # Remove '?' marks
 data <-
-  data %>% 
+  data %>%
   mutate(associated_plant_taxa = gsub("\\?", "", associated_plant_taxa))
 
 data$associated_plant_taxa %>% unique() -> associated_plant_taxa
-tibble(associated_plants = associated_plant_taxa) %>% 
+tibble(associated_plants = associated_plant_taxa) %>%
   mutate(number_of_taxa = str_count(associated_plants, pattern = ",") + 1) -> associated_plants # Maximum 11 plant taxa listed for a given invertebrate
 
 # Split by ", " to separate plant taxa in single column
-split_df <- 
-  data %>% 
+split_df <-
+  data %>%
   separate(associated_plant_taxa, c("a","b","c","d","e","f","g","h","i","j","k"), sep = ", ") # Allow 11 columns
 
 # Pivot to long format
 cleaned_df <-
-  split_df %>% 
-  pivot_longer(c("a","b","c","d","e","f","g","h","i","j","k"), names_to = "old_columns", values_to = "associated_plant_taxa") %>% 
-  drop_na(associated_plant_taxa) %>% 
+  split_df %>%
+  pivot_longer(c("a","b","c","d","e","f","g","h","i","j","k"), names_to = "old_columns", values_to = "associated_plant_taxa") %>%
+  drop_na(associated_plant_taxa) %>%
   select(-old_columns)
 
 # Extract unique plant taxa names
-associated_plant_taxa <- 
+associated_plant_taxa <-
   cleaned_df$associated_plant_taxa %>% unique() %>% tibble(original_name = .)
 ```
 
@@ -51,13 +51,13 @@ Align with APC using `ausflora` (ignored hybrids and sp./spp.)
 
 ```{r}
 # Align names to the APC and APNI
-plant_taxa_aligned <- 
+plant_taxa_aligned <-
   ausflora::align_taxa(associated_plant_taxa$original_name)
 
 # Update taxonomy for all aligned names
-plant_taxa_updated <- 
+plant_taxa_updated <-
   ausflora::update_taxonomy(
-    plant_taxa_aligned$aligned_name, 
+    plant_taxa_aligned$aligned_name,
     output = "associated_plant_taxa.csv"
   )
 ```
@@ -66,12 +66,12 @@ Repeat but remove below-species level taxa so just species, genus or family leve
 
 ```{r}
 plant_taxa_updated <-
-  plant_taxa_updated %>% 
+  plant_taxa_updated %>%
   mutate(canonicalName_subbed = gsub("\\s(?:subsp|var|f|sect)\\.\\s.+$", "", canonicalName, perl = TRUE))
 
-plant_taxa_subbed <- 
+plant_taxa_subbed <-
   ausflora::update_taxonomy(
-    plant_taxa_updated$canonicalName_subbed, 
+    plant_taxa_updated$canonicalName_subbed,
     output = "associated_plant_taxa_to_species_only.csv")
 plant_taxa_subbed <- dplyr::rename(plant_taxa_subbed, canonicalName_subbed = aligned_name)
 ```
@@ -84,10 +84,10 @@ plant_taxa_updated <- plant_taxa_updated %>% dplyr::select(aligned_name, canonic
 plant_taxa_subbed <- plant_taxa_subbed %>% dplyr::select(canonicalName_subbed, canonicalName, scientificNameAuthorship, taxonomicStatus, taxonRank, family, subclass, taxonDistribution) %>% rename(canonicalName_to_species = canonicalName)
 
 final_taxa <-
-  associated_plant_taxa %>% 
-  left_join(by = "original_name", plant_taxa_aligned) %>% 
-  left_join(by = "aligned_name", plant_taxa_updated) %>% 
-  rquery::natural_join(plant_taxa_subbed, by = "canonicalName_subbed") %>% 
+  associated_plant_taxa %>%
+  left_join(by = "original_name", plant_taxa_aligned) %>%
+  left_join(by = "aligned_name", plant_taxa_updated) %>%
+  rquery::natural_join(plant_taxa_subbed, by = "canonicalName_subbed") %>%
   relocate(original_name, aligned_name, source, canonicalName, canonicalName_subbed, canonicalName_to_species, .before = family)
 
 final_taxa %>% write_csv("final_alignments_with_APC.csv")
@@ -104,108 +104,67 @@ library(austraits)
 invert_plant_taxa <- read_csv("final_alignments_with_APC.csv")
 c(invert_plant_taxa$canonicalName, invert_plant_taxa$canonicalName_to_species) %>% unique() -> host_plant_taxa
 
-#austraits <- 
+#austraits <-
 #  load_austraits(path = "data/austraits", version = get_version_latest())
-austraits <- read_rds("austraits-a8118973-20230629.rds")
+#austraits <- read_rds("austraits-a8118973-20230629.rds")
+austraits <- read_rds("austraits-2023-09-12.rds")
 
 #recovery_traits <-
-#  extract_trait(austraits, 
+#  extract_trait(austraits,
 #                c("resprouting_capacity", "resprouting_capacity_juvenile", "post_fire_recruitment", "reproductive_maturity", "fire_time_from_fire_to_flowering", "fire_time_from_fire_to_50_percent_flowering", "	fire_time_from_fire_to_peak_flowering", "fire_time_from_fire_to_fruiting", "fire_time_from_fire_to_50_percent_fruiting"))
 
+austraits$traits %>%
+  filter(trait_name %in% c("resprouting_capacity", "post_fire_recruitment", "reproductive_maturity", "fire_time_from_fire_to_flowering", "fire_time_from_fire_to_fruiting")) %>%
+  write_csv("full_plant_recovery_traits.csv")
+
 recovery_traits <-
-  austraits$traits %>% 
+  austraits$traits %>%
   filter(trait_name %in% c("reproductive_maturity", "fire_time_from_fire_to_flowering", "fire_time_from_fire_to_fruiting"))
 ```
 
-Attach context columns (fire severity and intensity if available)
 
 ```{r}
-#recovery_traits <- recovery_traits %>% join_contexts()
-#recovery_traits <- recovery_traits$traits
-# Other context properties
-#austraits$contexts %>% 
-#  filter(context_property %in% c("habitat flammability", "time to flowering type", "fire intensity", "fire response type", "fire severity", "fire season")) %>% 
-#  distinct(across(-link_vals), .keep_all = TRUE) %>% 
-#  pivot_wider(names_from = link_id, values_from = link_vals) %>% 
-#  pivot_wider(names_from = context_property, values_from = value) -> contexts
-
-austraits$contexts %>% 
-  filter(context_property %in% c("time to flowering type")) %>% 
-  distinct(across(-link_vals), .keep_all = TRUE) %>% 
-  pivot_wider(names_from = link_id, values_from = link_vals) %>% 
+austraits$contexts %>%
+  filter(context_property %in% c("time to flowering type")) %>%
+  distinct(across(-link_vals), .keep_all = TRUE) %>%
+  pivot_wider(names_from = link_id, values_from = link_vals) %>%
   pivot_wider(names_from = context_property, values_from = value) -> contexts
-# I can't figure out how to join contexts nicely (multiple link_vals per link_id so how do you left_join to traits?)
-recovery_traits <- 
-  recovery_traits %>% 
-  left_join(contexts, by = c("dataset_id"))
+
+check_if_join <- function(dataset_id_to_check, entity_context_id_to_check, contexts) {
+  (contexts %>% filter(dataset_id_to_check == dataset_id, str_detect(entity_context_id, entity_context_id_to_check)) %>% nrow()) > 0
+}
 
 recovery_traits <-
-  recovery_traits %>% 
-  mutate(final_time_to_flowering_type = if_else(str_detect(entity_context_id.y, entity_context_id.x), `time to flowering type`, NA_character_)) %>% 
-  mutate(across(c(category, description, entity_context_id.y, `time to flowering type`, final_time_to_flowering_type), .fns = ~if_else(trait_name == "reproductive_maturity", NA_character_, .x)))
+  recovery_traits %>%
+  rowwise() %>%
+  mutate(to_join = check_if_join(dataset_id, entity_context_id, contexts))
 
-recovery_traits <-
-  recovery_traits %>% 
-  filter(!(trait_name %in% c("fire_time_from_fire_to_fruiting", "fire_time_from_fire_to_flowering") & is.na(final_time_to_flowering_type))) %>% 
-  select(-entity_context_id.x)
+contexts <-
+  contexts %>%
+  mutate(to_join = TRUE)
+
+new_recovery_traits <- recovery_traits %>%
+  left_join(contexts, by = c("dataset_id", "to_join"))
+
+new_recovery_traits <-
+  new_recovery_traits %>%
+  filter(str_detect(entity_context_id.y, entity_context_id.x) | is.na(entity_context_id.y))
 ```
 
-Check data coverage
 
 ```{r}
-recovery_traits %>% 
-  filter(trait_name == "resprouting_capacity") -> resprouting_capacity
-resprouting_capacity$taxon_name %>% unique() %>% length() 
-
-recovery_traits %>% 
-  filter(trait_name == "resprouting_capacity_juvenile") -> resprouting_capacity_juvenile
-resprouting_capacity_juvenile$taxon_name %>% unique() %>% length() 
-
-recovery_traits %>% 
-  filter(trait_name == "post_fire_recruitment") -> post_fire_recruitment
-post_fire_recruitment$taxon_name %>% unique() %>% length() 
-
-recovery_traits %>% 
-  filter(trait_name == "reproductive_maturity") -> reproductive_maturity
-reproductive_maturity$taxon_name %>% unique() %>% length() 
-
-recovery_traits %>% 
-  filter(trait_name == "fire_time_from_fire_to_flowering") -> fire_time_from_fire_to_flowering
-fire_time_from_fire_to_flowering$taxon_name %>% unique() %>% length() 
-
-recovery_traits %>% 
-  filter(trait_name == "fire_time_from_fire_to_peak_flowering") -> fire_time_from_fire_to_peak_flowering
-fire_time_from_fire_to_peak_flowering$taxon_name %>% unique() %>% length() 
-
-recovery_traits %>% 
-  filter(trait_name == "fire_time_from_fire_to_fruiting") -> fire_time_from_fire_to_fruiting
-fire_time_from_fire_to_fruiting$taxon_name %>% unique() %>% length() 
+new_recovery_traits <- new_recovery_traits %>%
+  pivot_wider(names_from = trait_name, values_from = value)
 ```
 
-Make simplified binary columns for resprouting and seeding (taking note that this does not capture fire intensity or severity)
 
 ```{r}
-recovery_traits %>% 
-  group_by(taxon_name) %>% 
-  summarise(
-    resprouts = sum(str_detect(value, "resprout")) > 0,
-    post_fire_seeder = sum(str_detect(value, "(?<!_)post_fire_recruitment")) > 0) %>% 
-  ungroup() -> resprouting_and_seeding
-
-recovery_traits %>% 
-  distinct() %>% 
-  pivot_wider(names_from = trait_name, values_from = value) -> new_recovery_traits
-```
-
-Simplified columns for reproductive maturity?
-
-```{r}
-new_recovery_traits %>% 
+new_recovery_traits %>%
   mutate(
     fire_time_from_fire_to_flowering = as.numeric(fire_time_from_fire_to_flowering)/12,
     fire_time_from_fire_to_fruiting = as.numeric(fire_time_from_fire_to_fruiting)/12,
     min_maturity = NA_character_,
-    max_maturity = NA_character_, 
+    max_maturity = NA_character_,
     avg_maturity = NA_character_,
     bin_maturity = NA_character_,
     min_maturity = if_else(value_type == "minimum", reproductive_maturity, min_maturity),
@@ -215,57 +174,194 @@ new_recovery_traits %>%
     min_time_to_flowering_seed = NA_real_,
     max_time_to_flowering_seed = NA_real_,
     avg_time_to_flowering_seed = NA_real_,
-    min_time_to_flowering_seed = if_else(value_type == "minimum" & final_time_to_flowering_type == "from seed", fire_time_from_fire_to_flowering, min_time_to_flowering_seed),
-    max_time_to_flowering_seed = if_else(value_type == "maximum" & final_time_to_flowering_type == "from seed", fire_time_from_fire_to_flowering, max_time_to_flowering_seed),
-    avg_time_to_flowering_seed = if_else(value_type %in% c("median", "mean") & final_time_to_flowering_type == "from seed", fire_time_from_fire_to_flowering, avg_time_to_flowering_seed),
+    min_time_to_flowering_seed = if_else(value_type == "minimum" & `time to flowering type` == "from seed", fire_time_from_fire_to_flowering, min_time_to_flowering_seed),
+    max_time_to_flowering_seed = if_else(value_type == "maximum" & `time to flowering type` == "from seed", fire_time_from_fire_to_flowering, max_time_to_flowering_seed),
+    avg_time_to_flowering_seed = if_else(value_type %in% c("median", "mean") & `time to flowering type` == "from seed", fire_time_from_fire_to_flowering, avg_time_to_flowering_seed),
     min_time_to_flowering_resprout = NA_real_,
     max_time_to_flowering_resprout = NA_real_,
     avg_time_to_flowering_resprout = NA_real_,
-    min_time_to_flowering_resprout = if_else(value_type == "minimum" & final_time_to_flowering_type == "from resprouting", fire_time_from_fire_to_flowering, min_time_to_flowering_resprout),
-    max_time_to_flowering_resprout = if_else(value_type == "maximum" & final_time_to_flowering_type == "from resprouting", fire_time_from_fire_to_flowering, max_time_to_flowering_resprout),
-    avg_time_to_flowering_resprout = if_else(value_type %in% c("median", "mean") & final_time_to_flowering_type == "from resprouting", fire_time_from_fire_to_flowering, avg_time_to_flowering_resprout),
+    min_time_to_flowering_resprout = if_else(value_type == "minimum" & `time to flowering type` == "from resprouting", fire_time_from_fire_to_flowering, min_time_to_flowering_resprout),
+    max_time_to_flowering_resprout = if_else(value_type == "maximum" & `time to flowering type` == "from resprouting", fire_time_from_fire_to_flowering, max_time_to_flowering_resprout),
+    avg_time_to_flowering_resprout = if_else(value_type %in% c("median", "mean") & `time to flowering type` == "from resprouting", fire_time_from_fire_to_flowering, avg_time_to_flowering_resprout),
     min_time_to_fruiting_seed = NA_real_,
     max_time_to_fruiting_seed = NA_real_,
     avg_time_to_fruiting_seed = NA_real_,
-    min_time_to_fruiting_seed = if_else(value_type == "minimum" & final_time_to_flowering_type == "from seed", fire_time_from_fire_to_fruiting, min_time_to_fruiting_seed),
-    max_time_to_fruiting_seed = if_else(value_type == "maximum" & final_time_to_flowering_type == "from seed", fire_time_from_fire_to_fruiting, max_time_to_fruiting_seed),
-    avg_time_to_fruiting_seed = if_else(value_type %in% c("median", "mean") & final_time_to_flowering_type == "from seed", fire_time_from_fire_to_fruiting, avg_time_to_fruiting_seed),
+    min_time_to_fruiting_seed = if_else(value_type == "minimum" & `time to flowering type` == "from seed", fire_time_from_fire_to_fruiting, min_time_to_fruiting_seed),
+    max_time_to_fruiting_seed = if_else(value_type == "maximum" & `time to flowering type` == "from seed", fire_time_from_fire_to_fruiting, max_time_to_fruiting_seed),
+    avg_time_to_fruiting_seed = if_else(value_type %in% c("median", "mean") & `time to flowering type` == "from seed", fire_time_from_fire_to_fruiting, avg_time_to_fruiting_seed),
     min_time_to_fruiting_resprout = NA_real_,
     max_time_to_fruiting_resprout = NA_real_,
     avg_time_to_fruiting_resprout = NA_real_,
-    min_time_to_fruiting_resprout = if_else(value_type == "minimum" & final_time_to_flowering_type == "from resprouting", fire_time_from_fire_to_fruiting, min_time_to_fruiting_resprout),
-    max_time_to_fruiting_resprout = if_else(value_type == "maximum" & final_time_to_flowering_type == "from resprouting", fire_time_from_fire_to_fruiting, max_time_to_fruiting_resprout),
-    avg_time_to_fruiting_resprout = if_else(value_type %in% c("median", "mean") & final_time_to_flowering_type == "from resprouting", fire_time_from_fire_to_fruiting, avg_time_to_fruiting_resprout)
+    min_time_to_fruiting_resprout = if_else(value_type == "minimum" & `time to flowering type` == "from resprouting", fire_time_from_fire_to_fruiting, min_time_to_fruiting_resprout),
+    max_time_to_fruiting_resprout = if_else(value_type == "maximum" & `time to flowering type` == "from resprouting", fire_time_from_fire_to_fruiting, max_time_to_fruiting_resprout),
+    avg_time_to_fruiting_resprout = if_else(value_type %in% c("median", "mean") & `time to flowering type` == "from resprouting", fire_time_from_fire_to_fruiting, avg_time_to_fruiting_resprout)
+  ) -> new_recovery_traits
+```
+
+
+Attach context columns (fire severity and intensity if available)
+
+```{r}
+#recovery_traits <- recovery_traits %>% join_contexts()
+#recovery_traits <- recovery_traits$traits
+# Other context properties
+#austraits$contexts %>%
+#  filter(context_property %in% c("habitat flammability", "time to flowering type", "fire intensity", "fire response type", "fire severity", "fire season")) %>%
+#  distinct(across(-link_vals), .keep_all = TRUE) %>%
+#  pivot_wider(names_from = link_id, values_from = link_vals) %>%
+#  pivot_wider(names_from = context_property, values_from = value) -> contexts
+
+austraits$contexts %>%
+  filter(context_property %in% c("time to flowering type")) %>%
+  distinct(across(-link_vals), .keep_all = TRUE) %>%
+  pivot_wider(names_from = link_id, values_from = link_vals) %>%
+  pivot_wider(names_from = context_property, values_from = value) -> contexts
+# I can't figure out how to join contexts nicely (multiple link_vals per link_id so how do you left_join to traits?)
+recovery_traits <-
+  recovery_traits %>%
+  left_join(contexts, by = c("dataset_id"))
+
+
+recovery_traits <-
+  recovery_traits %>%
+  mutate(final_time_to_flowering_type = if_else(str_detect(entity_context_id.y, entity_context_id.x), `time to flowering type`, NA_character_)) %>%
+  mutate(across(c(category, description, entity_context_id.y, `time to flowering type`, final_time_to_flowering_type), .fns = ~if_else(trait_name == "reproductive_maturity", NA_character_, .x)))
+
+recovery_traits <-
+  recovery_traits %>%
+  filter(!(trait_name %in% c("fire_time_from_fire_to_fruiting", "fire_time_from_fire_to_flowering") & is.na(final_time_to_flowering_type))) %>%
+  select(-entity_context_id.x)
+```
+
+Check data coverage
+
+```{r}
+recovery_traits %>%
+  filter(trait_name == "resprouting_capacity") -> resprouting_capacity
+resprouting_capacity$taxon_name %>% unique() %>% length()
+
+recovery_traits %>%
+  filter(trait_name == "resprouting_capacity_juvenile") -> resprouting_capacity_juvenile
+resprouting_capacity_juvenile$taxon_name %>% unique() %>% length()
+
+recovery_traits %>%
+  filter(trait_name == "post_fire_recruitment") -> post_fire_recruitment
+post_fire_recruitment$taxon_name %>% unique() %>% length()
+
+recovery_traits %>%
+  filter(trait_name == "reproductive_maturity") -> reproductive_maturity
+reproductive_maturity$taxon_name %>% unique() %>% length()
+
+recovery_traits %>%
+  filter(trait_name == "fire_time_from_fire_to_flowering") -> fire_time_from_fire_to_flowering
+fire_time_from_fire_to_flowering$taxon_name %>% unique() %>% length()
+
+recovery_traits %>%
+  filter(trait_name == "fire_time_from_fire_to_peak_flowering") -> fire_time_from_fire_to_peak_flowering
+fire_time_from_fire_to_peak_flowering$taxon_name %>% unique() %>% length()
+
+recovery_traits %>%
+  filter(trait_name == "fire_time_from_fire_to_fruiting") -> fire_time_from_fire_to_fruiting
+fire_time_from_fire_to_fruiting$taxon_name %>% unique() %>% length()
+```
+
+Make simplified binary columns for resprouting and seeding (taking note that this does not capture fire intensity or severity)
+
+```{r}
+recovery_traits %>%
+  group_by(taxon_name) %>%
+  summarise(
+    resprouts = sum(str_detect(value, "resprout")) > 0,
+    post_fire_seeder = sum(str_detect(value, "(?<!_)post_fire_recruitment")) > 0) %>%
+  ungroup() -> resprouting_and_seeding
+
+new_recovery_traits <- new_recovery_traits %>%
+  pivot_wider(names_from = trait_name, values_from = value)
+```
+
+Simplified columns for reproductive maturity?
+
+```{r}
+new_recovery_traits %>%
+  mutate(
+    fire_time_from_fire_to_flowering = as.numeric(fire_time_from_fire_to_flowering)/12,
+    fire_time_from_fire_to_fruiting = as.numeric(fire_time_from_fire_to_fruiting)/12,
+    min_maturity = NA_character_,
+    max_maturity = NA_character_,
+    avg_maturity = NA_character_,
+    bin_maturity = NA_character_,
+    min_maturity = if_else(value_type == "minimum", reproductive_maturity, min_maturity),
+    max_maturity = if_else(value_type == "maximum", reproductive_maturity, max_maturity),
+    avg_maturity = if_else(value_type %in% c("median", "mean"), reproductive_maturity, avg_maturity),
+    bin_maturity = if_else(value_type == "bin", reproductive_maturity, bin_maturity),
+    min_time_to_flowering_seed = NA_real_,
+    max_time_to_flowering_seed = NA_real_,
+    avg_time_to_flowering_seed = NA_real_,
+    min_time_to_flowering_seed = if_else(value_type == "minimum" & `time to flowering type` == "from seed", fire_time_from_fire_to_flowering, min_time_to_flowering_seed),
+    max_time_to_flowering_seed = if_else(value_type == "maximum" & `time to flowering type` == "from seed", fire_time_from_fire_to_flowering, max_time_to_flowering_seed),
+    avg_time_to_flowering_seed = if_else(value_type %in% c("median", "mean") & `time to flowering type` == "from seed", fire_time_from_fire_to_flowering, avg_time_to_flowering_seed),
+    min_time_to_flowering_resprout = NA_real_,
+    max_time_to_flowering_resprout = NA_real_,
+    avg_time_to_flowering_resprout = NA_real_,
+    min_time_to_flowering_resprout = if_else(value_type == "minimum" & `time to flowering type` == "from resprouting", fire_time_from_fire_to_flowering, min_time_to_flowering_resprout),
+    max_time_to_flowering_resprout = if_else(value_type == "maximum" & `time to flowering type` == "from resprouting", fire_time_from_fire_to_flowering, max_time_to_flowering_resprout),
+    avg_time_to_flowering_resprout = if_else(value_type %in% c("median", "mean") & `time to flowering type` == "from resprouting", fire_time_from_fire_to_flowering, avg_time_to_flowering_resprout),
+    min_time_to_fruiting_seed = NA_real_,
+    max_time_to_fruiting_seed = NA_real_,
+    avg_time_to_fruiting_seed = NA_real_,
+    min_time_to_fruiting_seed = if_else(value_type == "minimum" & `time to flowering type` == "from seed", fire_time_from_fire_to_fruiting, min_time_to_fruiting_seed),
+    max_time_to_fruiting_seed = if_else(value_type == "maximum" & `time to flowering type` == "from seed", fire_time_from_fire_to_fruiting, max_time_to_fruiting_seed),
+    avg_time_to_fruiting_seed = if_else(value_type %in% c("median", "mean") & `time to flowering type` == "from seed", fire_time_from_fire_to_fruiting, avg_time_to_fruiting_seed),
+    min_time_to_fruiting_resprout = NA_real_,
+    max_time_to_fruiting_resprout = NA_real_,
+    avg_time_to_fruiting_resprout = NA_real_,
+    min_time_to_fruiting_resprout = if_else(value_type == "minimum" & `time to flowering type` == "from resprouting", fire_time_from_fire_to_fruiting, min_time_to_fruiting_resprout),
+    max_time_to_fruiting_resprout = if_else(value_type == "maximum" & `time to flowering type` == "from resprouting", fire_time_from_fire_to_fruiting, max_time_to_fruiting_resprout),
+    avg_time_to_fruiting_resprout = if_else(value_type %in% c("median", "mean") & `time to flowering type` == "from resprouting", fire_time_from_fire_to_fruiting, avg_time_to_fruiting_resprout)
   ) -> new_recovery_traits
 
 new_recovery_traits %>%
-  group_by(taxon_name) %>% 
+  group_by(taxon_name) %>%
   summarise(min_maturity_primary = min(min_maturity, min_time_to_flowering_seed, min_time_to_fruiting_seed, na.rm = TRUE),
             max_maturity_primary = max(max_maturity, max_time_to_flowering_seed, max_time_to_fruiting_seed, na.rm = TRUE),
             avg_maturity_primary = mean(c(as.numeric(avg_maturity), avg_time_to_flowering_seed, avg_time_to_fruiting_seed), na.rm = TRUE),
-            bin_maturity_primary = dplyr::first(bin_maturity),
+            bin_maturity_primary = dplyr::first(na.omit(bin_maturity)),
             min_maturity_secondary = min(min_time_to_flowering_resprout, min_time_to_fruiting_resprout, na.rm = TRUE),
             max_maturity_secondary = max(max_time_to_flowering_resprout, max_time_to_fruiting_resprout, na.rm = TRUE),
-            avg_maturity_secondary = mean(c(avg_time_to_flowering_resprout, avg_time_to_fruiting_resprout), na.rm = TRUE)) %>% 
+            avg_maturity_secondary = mean(c(avg_time_to_flowering_resprout, avg_time_to_fruiting_resprout), na.rm = TRUE)) %>%
   ungroup() -> rep_maturity_summarised
 
-rep_maturity_summarised %>% 
+rep_maturity_summarised %>%
   mutate(min_maturity_secondary = if_else(min_maturity_secondary %in% c(Inf, -Inf, NaN), NA_real_, min_maturity_secondary),
          max_maturity_secondary = if_else(max_maturity_secondary %in% c(Inf, -Inf, NaN), NA_real_, max_maturity_secondary),
          avg_maturity_primary = if_else(avg_maturity_primary %in% c(Inf, -Inf, NaN), NA_real_, avg_maturity_primary),
          avg_maturity_secondary = if_else(avg_maturity_secondary %in% c(Inf, -Inf, NaN), NA_real_, avg_maturity_secondary)
-         ) %>% 
+         ) %>%
   select(-max_maturity_primary, -max_maturity_secondary) -> rep_maturity_summarised
 
+rep_maturity_summarised %>%
+  filter(!is.na(min_maturity_primary) | !is.na(avg_maturity_primary) | !is.na(bin_maturity_primary) | !is.na(min_maturity_secondary) | !is.na(avg_maturity_secondary)) -> rep_maturity_summarised
+
+austraits$traits %>%
+  filter(trait_name %in% c("resprouting_capacity", "post_fire_recruitment")) %>%
+  group_by(taxon_name) %>%
+  summarise(
+    resprouts = sum(str_detect(value, "resprout")) > 0,
+    post_fire_seeder = sum(str_detect(value, "(?<!_)post_fire_recruitment")) > 0) %>%
+  ungroup() -> resprouting_and_seeding
 resprouting_seeding <- read_rds("resprouting_seeding.rds")
 
 library(rqdatatable)
 simplified_recovery_traits <-
-  resprouting_seeding %>% 
-  select(taxon_name, resprouting_binomial, seeding_binomial) %>% 
-  natural_join(rep_maturity_summarised, by = "taxon_name", jointype = "FULL") %>% 
-  relocate(min_maturity_primary, .after = seeding_binomial) %>% 
-  relocate(avg_maturity_primary, bin_maturity_primary, min_maturity_secondary, avg_maturity_secondary, .after = min_maturity_primary)
+  resprouting_and_seeding %>%
+  natural_join(rep_maturity_summarised, by = "taxon_name", jointype = "FULL")
 
 simplified_recovery_traits %>% write_csv("plant_recovery_traits.csv")
+```
+
+
+```{r}
+data <- read_csv("missing_plant_names_Sep_2023.csv")
+
+plant_recovery_traits <- read_csv("plant_recovery_traits.csv")
 ```
